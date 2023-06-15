@@ -11,15 +11,16 @@ You can edit this file as you like.
   , "debug"
   , "effect"
   , "foreign-object"
+  , "free"
   , "functors"
   , "node-fs"
   , "node-readline"
   , "optparse"
+  , "parseint"
   , "parsing"
-  , "free"
   , "psci-support"
-  , "stringutils"
   , "strings"
+  , "stringutils"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs" ]
