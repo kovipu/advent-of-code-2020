@@ -6,7 +6,8 @@ import Data.Semigroup ((<>))
 import Data.Unit (Unit)
 import Data.String (split)
 import Data.String.Pattern (Pattern(..))
-import Data.Array (filter, init, catMaybes, (!!), head, tail, findIndex)
+import Data.Array (filter, init, catMaybes, (!!), head, tail, findIndex, (:), foldl)
+import Control.MonadZero (guard)
 import Data.Int.Parse (parseInt, toRadix)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Effect (Effect)
@@ -32,7 +33,6 @@ part1 :: String -> Effect Unit
 part1 input = do
   let
     report = parse input
-  let
     result =
       findSum report
         # fromMaybe (-1)
@@ -46,17 +46,27 @@ findSum report = do
   -- add x to each in xs
   let
     sums = map (_ + x) xs
-  -- did we get 2020?
-  let
+
     match = findIndex (_ == 2020) sums
-  -- if not -> recurse with xs
   case match of
-    Just idx -> xs !! idx >>= \n -> Just (x * n)
+    -- if 2020 found -> return product
+    Just idx -> xs !! idx # map (_ * x)
+    -- if not found -> recurse with xs
     Nothing -> findSum xs
 
 --------------------------------------------------------------------------------
 part2 :: String -> Effect Unit
 part2 input = do
   let
-    result = "<TODO>"
+    report = parse input
+
+    result = findThreeSum report # head # fromMaybe (-1) # show
   log $ "Part 2 ==> " <> result
+
+findThreeSum :: Array Int -> Array Int
+findThreeSum arr = do
+  x <- arr
+  y <- arr
+  z <- arr
+  guard $ x + y + z == 2020
+  pure (x * y * z)
