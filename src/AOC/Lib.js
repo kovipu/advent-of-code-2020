@@ -1,19 +1,21 @@
 'use strict';
 
-exports.unsafeParseInt10 = function(str) {
+const unsafeParseInt10 = (str) => {
   return parseInt(str, 10);
 };
 
-exports.unsafeParseIntBase = function(str) {
+const unsafeParseIntBase = (str) => {
   return function(base) {
     return parseInt(str, base);
   };
 };
 
-exports.unsafeParseFloat = function(str) {
+const unsafeParseFloat = (str) => {
   return parseFloat(str);
 };
 
-exports.getInputDirectory = function() {
+const getInputDirectory = () => {
   return process.env.AOC_INPUT_DIRECTORY;
 };
+
+export { unsafeParseInt10, unsafeParseIntBase, unsafeParseFloat, getInputDirectory }

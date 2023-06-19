@@ -3,7 +3,7 @@ module AOC.Lib where
 import Control.Applicative (pure)
 import Control.Bind (bind, (=<<))
 import Data.Array as A
-import Data.BigNumber (BigNumber, parseBigNumber)
+-- import Data.BigNumber (BigNumber, parseBigNumber)
 import Data.Boolean (otherwise)
 import Data.CommutativeRing ((+))
 import Data.Either (Either(..))
@@ -21,7 +21,7 @@ import Data.String as S
 import Data.String.Pattern (Pattern)
 import Data.Unit (Unit)
 import Effect (Effect)
-import Global (isNaN)
+-- import Global (isNaN)
 import Node.Encoding (Encoding(..))
 import Node.FS.Sync (readTextFile, writeTextFile)
 import Unsafe.Coerce (unsafeCoerce)
@@ -48,10 +48,10 @@ eitherToMaybe (Right a) = Just a
 -- Bignumber
 -- HACKY!
 -- | Convert an integer into a bignumber
-intToBigNumber :: Int -> BigNumber
-intToBigNumber x = case parseBigNumber (show x) of
-  Left _ -> unsafeCoerce "IMPOSSIBLE: fromInt: INVALID BIGNUM!"
-  Right y -> y
+-- intToBigNumber :: Int -> BigNumber
+-- intToBigNumber x = case parseBigNumber (show x) of
+--   Left _ -> unsafeCoerce "IMPOSSIBLE: fromInt: INVALID BIGNUM!"
+--   Right y -> y
 
 --------------------------------------------------------------------------------
 -- Array splitting
@@ -128,19 +128,19 @@ foreign import unsafeParseInt10 :: String -> Number
 foreign import unsafeParseFloat :: String -> Number
 
 -- | Turn NaN's into Nothing
-preventNaN :: Number -> Maybe Number
-preventNaN n
-  | isNaN n = Nothing
-  | otherwise = Just n
+-- preventNaN :: Number -> Maybe Number
+-- preventNaN n
+--   | isNaN n = Nothing
+--   | otherwise = Just n
 
 -- | Parse an integer in specified base
-parseIntBaseN :: Int -> String -> Maybe Int
-parseIntBaseN n s = round <$> preventNaN (unsafeParseIntBase s n)
+-- parseIntBaseN :: Int -> String -> Maybe Int
+-- parseIntBaseN n s = round <$> preventNaN (unsafeParseIntBase s n)
 
--- | Parse an integer
-parseInt10 :: String -> Maybe Int
-parseInt10 s = round <$> preventNaN (unsafeParseInt10 s)
+-- -- | Parse an integer
+-- parseInt10 :: String -> Maybe Int
+-- parseInt10 s = round <$> preventNaN (unsafeParseInt10 s)
 
--- | Parse a float
-parseFloat :: String -> Maybe Number
-parseFloat s = preventNaN (unsafeParseFloat s)
+-- -- | Parse a float
+-- parseFloat :: String -> Maybe Number
+-- parseFloat s = preventNaN (unsafeParseFloat s)

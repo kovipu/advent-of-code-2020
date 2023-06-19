@@ -1,17 +1,14 @@
 module Year2020.Day01 where
 
 import Prelude
-import Data.Function (($))
-import Data.Semigroup ((<>))
-import Data.Unit (Unit)
 import Data.String (split)
 import Data.String.Pattern (Pattern(..))
-import Data.Array (filter, init, catMaybes, (!!), head, tail, findIndex, (:), foldl)
-import Control.MonadZero (guard)
-import Data.Int.Parse (parseInt, toRadix)
+import Data.Array (filter, catMaybes, (!!), head, tail, findIndex)
+import Control.Alternative (guard)
+import Data.Int (fromString)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Effect (Effect)
-import Effect.Class.Console (log, logShow)
+import Effect.Class.Console (log)
 
 test :: String
 test =
@@ -26,13 +23,14 @@ parse :: String -> Array Int
 parse input =
   split (Pattern "\n") input
     # filter (_ /= "") -- test input has a newline
-    # map (\n -> parseInt n (toRadix 10))
+    # map (\n -> fromString n)
     # catMaybes -- all should be valid integers
 
 part1 :: String -> Effect Unit
 part1 input = do
   let
     report = parse input
+
     result =
       findSum report
         # fromMaybe (-1)

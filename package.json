@@ -10,12 +10,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "purescript": "^0.13.8",
+    "purescript": "^0.15.9",
     "purty": "^7.0.0",
-    "spago": "^0.17.0"
+    "spago": "^0.21.0"
   },
   "dependencies": {
-    "bignumber.js": "^9.0.1",
+    "bignumber.js": "^9.1.1",
     "dotenv": "^8.2.0",
     "request": "^2.88.2"
   }

@@ -4,13 +4,6 @@ Welcome to your new Dhall package-set!
 Below are instructions for how to edit this file for most use
 cases, so that you don't need to know Dhall to use it.
 
-## Warning: Don't Move This Top-Level Comment!
-
-Due to how `dhall format` currently works, this comment's
-instructions cannot appear near corresponding sections below
-because `dhall format` will delete the comment. However,
-it will not delete a top-level comment like this one.
-
 ## Use Cases
 
 Most will want to do one or both of these options:
@@ -49,6 +42,7 @@ in  upstream
   with halogen.repo = "https://example.com/path/to/git/repo.git"
 
   with halogen-vdom.version = "v4.0.0"
+  with halogen-vdom.dependencies = [ "extra-dependency" ] # halogen-vdom.dependencies
 -------------------------------
 
 ### Additions
@@ -104,23 +98,8 @@ in  upstream
       }
 -------------------------------
 -}
-
 let upstream =
-      https://github.com/purescript/package-sets/releases/download/psc-0.13.8-20201204/packages.dhall sha256:89f184cea1ca40630ea34fb68972589b8eedf4809275686aef85f86abaa2145f
+      https://github.com/purescript/package-sets/releases/download/psc-0.15.8-20230617/packages.dhall
+        sha256:292a92e32db0272db2089f3234140287c9eaf2fc15b6790a3c51f41471050eeb
 
 in  upstream
-  with bignumber =
-    { dependencies =
-      [ "either"
-      , "exceptions"
-      , "tuples-native"
-      , "integers"
-      , "functions"
-      , "generics-rep"
-      , "row-extra"
-      ]
-    , repo =
-      "https://github.com/athanclark/purescript-bignumber.git"
-    , version =
-      "v1.0.1"
-    }
