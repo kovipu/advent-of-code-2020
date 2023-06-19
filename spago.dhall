@@ -24,8 +24,11 @@ to generate this file without the comments in this block.
   , "node-fs"
   , "node-path"
   , "optparse"
+  , "parsing"
   , "prelude"
   , "strings"
+  , "tuples"
+  , "unicode"
   , "unsafe-coerce"
   ]
 , packages = ./packages.dhall
