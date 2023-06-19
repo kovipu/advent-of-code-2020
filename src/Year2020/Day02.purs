@@ -6,8 +6,9 @@ import Data.Either (Either(..))
 import Effect (Effect)
 import Effect.Class.Console (log, logShow)
 import Control.Alternative (empty)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String.CodeUnits (fromCharArray, toCharArray)
+import Data.String.Unsafe (charAt)
 import Data.String.CodePoints (codePointFromChar)
 import Data.CodePoint.Unicode (isDecDigit, isAlpha)
 import Parsing (Parser, runParser)
@@ -15,6 +16,7 @@ import Parsing.String (char, anyChar, string, satisfy)
 import Parsing.Combinators.Array (manyTill_, many1, many)
 import Data.Array.NonEmpty (toArray)
 import Data.Int (fromString)
+import Data.Int.Bits ((.^.))
 import Data.Tuple (fst)
 
 test :: String
@@ -97,5 +99,24 @@ countOccurences str c =
 part2 :: String -> Effect Unit
 part2 input = do
   let
-    result = "<TODO>"
-  log $ "Part 2 ==> " <> result
+    parsed = runParser input (many parseLine)
+
+    policies = case parsed of
+      Right p -> p
+      _ -> []
+
+    numValids = foldl (\acc p -> if isValid2 p then acc + 1 else acc) 0 policies
+  log $ "Part 2 ==> " <> show numValids
+
+isValid2 :: PasswordRow -> Boolean
+isValid2 { min, max, char, password } =
+  let
+    a = charAt (min - 1) password
+
+    b = charAt (max - 1) password
+
+    ac = a == char
+
+    bc = b == char
+  in
+    (ac && not bc) || (not ac && bc)
