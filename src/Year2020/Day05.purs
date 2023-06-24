@@ -1,7 +1,7 @@
 module Year2020.Day05 where
 
 import Prelude
-import Data.Array ((!!), filter)
+import Data.Array (filter, find, elem, (..))
 import Data.Foldable (foldl)
 import Data.Int (pow)
 import Data.Maybe (Maybe(..))
@@ -27,7 +27,7 @@ part1 input = do
         # foldl
             ( \acc p ->
                 let
-                  newId = (parseSeat p).id
+                  newId = parseSeat p
                 in
                   if newId > acc then
                     newId
@@ -37,13 +37,7 @@ part1 input = do
             0
   log $ "Part 1 ==> " <> show result
 
-type Seat
-  = { row :: Int
-    , column :: Int
-    , id :: Int
-    }
-
-parseSeat :: String -> Seat
+parseSeat :: String -> Int
 parseSeat str =
   let
     -- first 7 characters make out the row
@@ -71,14 +65,9 @@ parseSeat str =
     bit9 = colValue str 9
 
     column = bit7 + bit8 + bit9
-
-    -- id maths
-    id = 8 * row + column
   in
-    { row: row
-    , column: column
-    , id: id
-    }
+    -- id maths
+    8 * row + column
 
 rowValue :: String -> Int -> Int
 rowValue str idx =
@@ -98,5 +87,20 @@ colValue str idx =
 part2 :: String -> Effect Unit
 part2 input = do
   let
+    seats =
+      split (Pattern "\n") input
+        # filter (_ /= "")
+        # map parseSeat
+
     result = "<TODO>"
-  log $ "Part 2 ==> " <> result
+
+    mySeat =
+      find
+        ( \s ->
+            ( not elem s seats
+                && elem (s - 1) seats
+                && elem (s + 1) seats
+            )
+        )
+        (0 .. 1000)
+  log $ "Part 2 ==> " <> show mySeat
