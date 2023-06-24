@@ -1,13 +1,19 @@
 module Year2020.Day04 where
 
 import Prelude
-import Data.Array (concatMap, all)
+import Control.Alternative (guard)
+import Data.Array (concatMap, all, head, tail, elem)
+import Data.CodePoint.Unicode (isDecDigit, isHexDigit)
+import Data.String.CodeUnits (toCharArray)
+import Data.String.CodePoints (codePointFromChar)
 import Data.Foldable (foldl)
-import Data.Map (Map, insert, empty, member)
-import Data.String (split)
+import Data.Int (fromString)
+import Data.Map (Map, insert, empty, member, lookup)
+import Data.Maybe (Maybe(..), isJust)
+import Data.String (split, contains, takeWhile, length)
 import Data.String.Pattern (Pattern(..))
 import Effect (Effect)
-import Effect.Class.Console (log, logShow)
+import Effect.Class.Console (log)
 
 test :: String
 test =
@@ -64,5 +70,71 @@ part1 input = do
 part2 :: String -> Effect Unit
 part2 input = do
   let
-    result = "<TODO>"
-  log $ "Part 2 ==> " <> result
+    passports = parse input
+
+    result =
+      foldl
+        ( \acc p -> case isValid2 p of
+            Just true -> acc + 1
+            _ -> acc
+        )
+        0
+        passports
+  log $ "Part 2 ==> " <> show result
+
+isValid2 :: Passport -> Maybe Boolean
+isValid2 p = do
+  -- Birth Year
+  byr <- lookup "byr" p >>= fromString
+  guard $ 1920 <= byr && byr <= 2002
+  -- Issue Year
+  iyr <- lookup "iyr" p >>= fromString
+  guard $ 2010 <= iyr && iyr <= 2020
+  -- Expiration Year
+  eyr <- lookup "eyr" p >>= fromString
+  guard $ 2020 <= eyr && eyr <= 2030
+  -- Height
+  hgt <- lookup "hgt" p
+  guard $ validateHeight hgt
+  -- Hair color
+  hcl <- lookup "hcl" p
+  guard $ validateHairColor hcl
+  -- Eye color
+  ecl <- lookup "ecl" p
+  guard $ elem ecl [ "amb", "blu", "brn", "gry", "grn", "hzl", "oth" ]
+  -- Passport ID
+  pid <- lookup "pid" p
+  guard $ validatePid pid
+  -- if all guards pass -> valid
+  pure true
+
+validateHeight :: String -> Boolean
+validateHeight hgt =
+  let
+    height = fromString $ takeWhile isDecDigit hgt
+
+    cm = contains (Pattern "cm") hgt
+  in
+    case height of
+      Just h ->
+        if cm then
+          150 <= h && h <= 193
+        else
+          59 <= h && h <= 76
+      _ -> false
+
+validateHairColor :: String -> Boolean
+validateHairColor hcl =
+  let
+    chars = toCharArray hcl
+
+    prefix = head chars
+
+    numbers = tail chars
+  in
+    case prefix, numbers of
+      Just p, Just arr -> p == '#' && all (codePointFromChar >>> isHexDigit) arr
+      _, _ -> false
+
+validatePid :: String -> Boolean
+validatePid pid = length pid == 9 && isJust (fromString pid)
