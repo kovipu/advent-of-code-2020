@@ -25,6 +25,7 @@ to generate this file without the comments in this block.
   , "node-fs"
   , "node-path"
   , "optparse"
+  , "ordered-collections"
   , "parsing"
   , "prelude"
   , "strings"
