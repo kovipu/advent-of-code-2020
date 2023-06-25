@@ -4,10 +4,11 @@ import Prelude
 import Control.Alternative (empty)
 import Control.Monad.ST (run, while)
 import Control.Monad.ST.Ref (new, read, modify)
-import Data.Array ((:), (!!), elem, length)
+import Data.Array ((:), (!!), elem, length, updateAt)
 import Data.Array.NonEmpty (toArray)
 import Data.CodePoint.Unicode (isDecDigit)
-import Data.Either (Either(..))
+import Data.Either (Either(..), isRight)
+import Data.FoldableWithIndex (findWithIndex)
 import Data.Generic.Rep (class Generic)
 import Data.Int (fromString)
 import Data.Show.Generic (genericShow)
@@ -36,7 +37,7 @@ acc +6
 """
 
 data Instruction
-  = Nop
+  = Nop Int
   | Acc Int
   | Jmp Int
 
@@ -55,7 +56,7 @@ parseInstruction = do
   let
     value = if sign == '-' then -1 * val else val
   case op of
-    "nop" -> pure Nop
+    "nop" -> pure $ Nop value
     "acc" -> pure $ Acc value
     "jmp" -> pure $ Jmp value
     _ -> empty
@@ -88,7 +89,7 @@ runInstructions instructions =
       )
       ( modify
           ( \{ pointer, accumulator, executed } -> case instructions !! pointer of
-              Just Nop ->
+              Just (Nop _) ->
                 { pointer: pointer + 1
                 , accumulator
                 , executed: pointer : executed
@@ -129,12 +130,38 @@ part1 input = do
 --------------------------------------------------------------------------------
 -- find the jmp or nop which fixes the code.
 -- change one -> run the code and see if it loops or not
+findFix :: Array Instruction -> Maybe { index :: Int, value :: Instruction }
+findFix instructions =
+  findWithIndex
+    ( \idx inst ->
+        -- change instruction at idx and see if it exits cleanly
+        let
+          updated = changeInst idx inst instructions
+        in
+          case updated of
+            Just u -> isRight $ runInstructions u
+            Nothing -> false
+    )
+    instructions
+
+changeInst :: Int -> Instruction -> Array Instruction -> Maybe (Array Instruction)
+changeInst idx inst instructions = case inst of
+  Acc n -> Nothing
+  Nop n -> updateAt idx (Jmp n) instructions
+  Jmp n -> updateAt idx (Nop n) instructions
+
 part2 :: String -> Effect Unit
 part2 input = do
-  let
-    instructions = case runParser input (many parseInstruction) of
-      Right i -> i
-      _ -> []
-
-    result = "<TODO>"
-  log $ "Part 2 ==> " <> result
+  instructions <- case runParser input (many parseInstruction) of
+    Right i -> pure i
+    Left _ -> throw "parsing failed"
+  { index, value } <- case findFix instructions of
+    Just n -> pure n
+    Nothing -> throw "No way to fix"
+  fixed <- case changeInst index value instructions of
+    Just f -> pure f
+    Nothing -> throw "you f'd up"
+  final <- case runInstructions fixed of
+    Right n -> pure n
+    Left _ -> throw "should exit cleanly"
+  log $ "Part 2 ==> " <> show final
