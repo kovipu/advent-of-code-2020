@@ -4,7 +4,7 @@ import Prelude
 import Control.Alternative (empty)
 import Control.Monad.ST (run, while)
 import Control.Monad.ST.Ref (new, read, modify)
-import Data.Array ((:), (!!), elem)
+import Data.Array ((:), (!!), elem, length)
 import Data.Array.NonEmpty (toArray)
 import Data.CodePoint.Unicode (isDecDigit)
 import Data.Either (Either(..))
@@ -15,6 +15,7 @@ import Data.String.CodePoints (codePointFromChar)
 import Data.String.CodeUnits (fromCharArray)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
+import Effect.Exception (throw)
 import Effect.Class.Console (log, logShow)
 import Parsing (Parser, runParser)
 import Parsing.String (takeN, char, satisfy)
@@ -70,13 +71,21 @@ parseNumber =
     # map (toArray >>> fromCharArray >>> fromString)
     >>= parseMaybeInt
 
---------------------------------------------------------------------------------
-runUntilLoop :: Array Instruction -> Int
-runUntilLoop instructions =
+-- if infinite loop -> Left acc
+-- if exit cleanly -> Right acc
+runInstructions :: Array Instruction -> Either Int Int
+runInstructions instructions =
   run do
+    let
+      end = length instructions
     ref <- new { pointer: 0, accumulator: 0, executed: [] }
     while
-      (read ref # map (\{ pointer, executed } -> not $ elem pointer executed))
+      ( read ref
+          # map
+              ( \{ pointer, executed } ->
+                  pointer < end && (not $ elem pointer executed)
+              )
+      )
       ( modify
           ( \{ pointer, accumulator, executed } -> case instructions !! pointer of
               Just Nop ->
@@ -99,21 +108,33 @@ runUntilLoop instructions =
           ref
       )
     final <- read ref
-    pure final.accumulator
+    -- possible bug: we can jump out of bounds to end if unlucky
+    if final.pointer == end then
+      pure $ Right final.accumulator
+    else
+      pure $ Left final.accumulator
 
+--------------------------------------------------------------------------------
 part1 :: String -> Effect Unit
 part1 input = do
   let
     instructions = case runParser input (many parseInstruction) of
       Right i -> i
       _ -> []
-
-    result = runUntilLoop instructions
+  result <- case runInstructions instructions of
+    Left n -> pure n
+    Right _ -> throw "no infinite loop"
   log $ "Part 1 ==> " <> show result
 
 --------------------------------------------------------------------------------
+-- find the jmp or nop which fixes the code.
+-- change one -> run the code and see if it loops or not
 part2 :: String -> Effect Unit
 part2 input = do
   let
+    instructions = case runParser input (many parseInstruction) of
+      Right i -> i
+      _ -> []
+
     result = "<TODO>"
   log $ "Part 2 ==> " <> result
