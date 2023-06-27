@@ -33,15 +33,15 @@ faded blue bags contain no other bags.
 dotted black bags contain no other bags.
 """
 
-type Rule
-  = { container :: String
-    , content :: Array Content
-    }
+type Rule =
+  { container :: String
+  , content :: Array Content
+  }
 
-type Content
-  = { color :: String
-    , number :: Int
-    }
+type Content =
+  { color :: String
+  , number :: Int
+  }
 
 parseRule :: Parser String Rule
 parseRule = do
@@ -82,8 +82,7 @@ parseContent = do
     Nothing -> empty
 
 --------------------------------------------------------------------------------
-type BagMap
-  = Map String (Array String)
+type BagMap = Map String (Array String)
 
 getBagMap :: Array Rule -> BagMap
 getBagMap = foldl addToBagMap Map.empty
@@ -118,8 +117,7 @@ part1 input = do
   log $ "Part 1 ==> " <> show result
 
 --------------------------------------------------------------------------------
-type RuleMap
-  = Map String (Array Content)
+type RuleMap = Map String (Array Content)
 
 getRuleMap :: Array Rule -> RuleMap
 getRuleMap rules =

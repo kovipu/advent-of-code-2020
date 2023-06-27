@@ -13,17 +13,13 @@ import Effect (Effect)
 import Effect.Uncurried as EFn
 import Node.Path (FilePath)
 
-type Year
-  = Int
+type Year = Int
 
-type Day
-  = Int
+type Day = Int
 
-type Part
-  = Int
+type Part = Int
 
-type Cookie
-  = String
+type Cookie = String
 
 data Command
   = Bootstrap Year Day
@@ -56,13 +52,13 @@ runOptions =
     <$> argument int (metavar "YEAR")
     <*> argument int (metavar "DAY")
     <*> optional
-        ( option int
-            ( long "part"
-                <> short 'p'
-                <> metavar "PART"
-                <> help "Use this to run only part 1 or part 2 from that day. Valid options are 1 or 2"
-            )
-        )
+      ( option int
+          ( long "part"
+              <> short 'p'
+              <> metavar "PART"
+              <> help "Use this to run only part 1 or part 2 from that day. Valid options are 1 or 2"
+          )
+      )
 
 main :: Effect Unit
 main = doit =<< execParser opts

@@ -26,12 +26,12 @@ test =
 2-9 c: ccccccccc
 """
 
-type PasswordRow
-  = { min :: Int
-    , max :: Int
-    , char :: Char
-    , password :: String
-    }
+type PasswordRow =
+  { min :: Int
+  , max :: Int
+  , char :: Char
+  , password :: String
+  }
 
 parseMaybeInt :: Maybe Int -> Parser String Int
 parseMaybeInt s = case s of
@@ -64,7 +64,8 @@ parseLine = do
   _ <- string ": "
   d <- parseString
   pure
-    $ { min: a
+    $
+      { min: a
       , max: b
       , char: c
       , password: d

@@ -26,8 +26,7 @@ test =
 .#..#...#.#
 """
 
-type TreeMap
-  = Array String
+type TreeMap = Array String
 
 parse :: String -> TreeMap
 parse input =
@@ -62,10 +61,10 @@ treeAtCoords x row =
     location == '#'
 
 --------------------------------------------------------------------------------
-type Slope
-  = { right :: Int
-    , down :: Int
-    }
+type Slope =
+  { right :: Int
+  , down :: Int
+  }
 
 part2 :: String -> Effect Unit
 part2 input = do

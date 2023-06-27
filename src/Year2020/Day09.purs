@@ -83,11 +83,9 @@ part1 input = do
 
 --------------------------------------------------------------------------------
 -- 2 pointer technique
-type Result
-  = Either State (Array Int)
+type Result = Either State (Array Int)
 
-type State
-  = { start :: Int, end :: Int, sum :: Int }
+type State = { start :: Int, end :: Int, sum :: Int }
 
 findSetSum :: State -> Array Int -> Int -> Array Int
 findSetSum state nums weakness = case unsafePartial $ step state nums weakness of
@@ -102,13 +100,14 @@ step { start, end, sum } nums weakness =
     new = indexThrow nums end
   in
     case sum + new of
-      n
-        | n < weakness -> Left $ { start, end: end + 1, sum: n }
-      n
-        | n > weakness -> Left $ { start: start + 1, end, sum: sum - head }
-      n
-        | n == weakness -> Right $ slice start (end + 1) nums
-      _ -> unsafeThrow "should not happen."
+      n | n < weakness ->
+        Left $ { start, end: end + 1, sum: n }
+      n | n > weakness ->
+        Left $ { start: start + 1, end, sum: sum - head }
+      n | n == weakness ->
+        Right $ slice start (end + 1) nums
+      _ ->
+        unsafeThrow "should not happen."
 
 indexThrow :: forall a. Partial => Array a -> Int -> a
 indexThrow arr idx = case arr !! idx of

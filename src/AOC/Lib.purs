@@ -92,10 +92,10 @@ chunk :: Int -> String -> Array String
 chunk len contents
   | S.length contents <= 0 = []
   | otherwise =
-    let
-      res = S.splitAt len contents
-    in
-      A.cons res.before (chunk len res.after)
+      let
+        res = S.splitAt len contents
+      in
+        A.cons res.before (chunk len res.after)
 
 --------------------------------------------------------------------------------
 -- Getting the input

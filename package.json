@@ -4,14 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "format": "purty src --write",
+    "format": "purs-tidy format-in-place 'src/**/*.purs'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "purescript": "^0.15.9",
-    "purty": "^7.0.0",
+    "purs-tidy": "^0.10.0",
     "spago": "^0.21.0"
   },
   "dependencies": {
