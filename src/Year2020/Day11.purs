@@ -53,6 +53,17 @@ parseRow row =
         _ -> unsafeThrow "data is ass"
     ) $ toCharArray row
 
+neighborOffsets =
+  [ -1 ~ -1
+  , 0 ~ -1
+  , 1 ~ -1
+  , 1 ~ 0
+  , 1 ~ 1
+  , 0 ~ 1
+  , -1 ~ 1
+  , -1 ~ 0
+  ]
+
 --------------------------------------------------------------------------------
 stabilize :: Grid -> Grid
 stabilize grid =
@@ -90,17 +101,6 @@ neighborCount grid x y =
     0
     neighborOffsets
 
-neighborOffsets =
-  [ -1 ~ -1
-  , 0 ~ -1
-  , 1 ~ -1
-  , 1 ~ 0
-  , 1 ~ 1
-  , 0 ~ 1
-  , -1 ~ 1
-  , -1 ~ 0
-  ]
-
 isNeighbor :: Grid -> Int -> Int -> Boolean
 isNeighbor grid x y =
   case grid !! y of
@@ -120,9 +120,64 @@ part1 input = do
   log $ "Part 1 ==> " <> show result
 
 --------------------------------------------------------------------------------
+stabilize2 :: Grid -> Grid
+stabilize2 grid =
+  let
+    newGrid = step2 grid
+  in
+    if newGrid == grid then newGrid
+    else stabilize2 newGrid
+
+step2 :: Grid -> Grid
+step2 grid =
+  mapWithIndex
+    ( \y row -> mapWithIndex
+        ( \x tile ->
+            case tile of
+              Floor -> Floor
+              Empty ->
+                if neighborCount2 grid x y == 0 then Occupied
+                else Empty
+              Occupied ->
+                if neighborCount2 grid x y >= 5 then Empty
+                else Occupied
+        )
+        row
+    )
+    grid
+
+neighborCount2 :: Grid -> Int -> Int -> Int
+neighborCount2 grid x y =
+  foldl
+    ( \acc (dx ~ dy) ->
+        if isNeighbor2 grid x y dx dy then acc + 1
+        else acc
+    )
+    0
+    neighborOffsets
+
+isNeighbor2 :: Grid -> Int -> Int -> Int -> Int -> Boolean
+isNeighbor2 grid x y dx dy =
+  let newx = x + dx
+      newy = y + dy
+  in case grid !! newy of
+    Nothing -> false
+    Just row -> case row !! newx of
+                    -- out of bounds
+                    Just Occupied -> true
+                    -- recurse to see across floors
+                    Just Floor -> isNeighbor2 grid newx newy dx dy
+                    -- Empty or Nothing 
+                    _ -> false
 
 part2 :: String -> Effect Unit
 part2 input = do
-  let result = "<TODO>"
-  log $ "Part 2 ==> " <> result
-
+  let
+    grid = parse input
+    stabilized = stabilize2 grid
+    result =
+      foldl
+        (\acc t -> if t == Occupied then acc + 1 else acc)
+        0
+        $ concat stabilized
+  log $ "Part 2 ==> " <> show result
