@@ -28,6 +28,7 @@ to generate this file without the comments in this block.
   , "node-path"
   , "optparse"
   , "ordered-collections"
+  , "pairs"
   , "parsing"
   , "partial"
   , "prelude"
