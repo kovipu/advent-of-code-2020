@@ -119,8 +119,55 @@ part1 input = do
 
 --------------------------------------------------------------------------------
 
+type State2 = { x :: Int, y :: Int, wx :: Int, wy :: Int }
+
+step2 :: State2 -> Instruction -> State2
+step2 st@{ x, y, wx, wy } inst =
+  case inst of
+    CardinalMove North val -> st { wy = wy + val }
+    CardinalMove South val -> st { wy = wy - val }
+    CardinalMove East val -> st { wx = wx + val }
+    CardinalMove West val -> st { wx = wx - val }
+    RelativeMove Left val -> rotate2 st val
+    RelativeMove Right val -> rotate2 st (-1 * val)
+    RelativeMove Forward val -> st { x = x + (val * wx), y = y + (val * wy) }
+
+rotate2 :: State2 -> Int -> State2
+rotate2 st@{ x, y, wx, wy } angle =
+  let
+    c = cos angle
+    s = sin angle
+    qx = wx * c - wy * s
+    qy = wx * s + wy * c
+  in
+    st { wx = qx, wy = qy }
+
+cos :: Int -> Int
+cos d = case d of
+  (-270) -> 0
+  (-180) -> -1
+  (-90) -> 0
+  90 -> 0
+  180 -> -1
+  270 -> 0
+  _ -> unsafeThrow "This is a lazy cosine function"
+
+sin :: Int -> Int
+sin d = case d of
+  (-270) -> 1
+  (-180) -> 0
+  (-90) -> -1
+  90 -> 1
+  180 -> 0
+  270 -> -1
+  _ -> unsafeThrow "This is a lazy sine function"
+
 part2 :: String -> Effect Unit
 part2 input = do
-  let result = "<TODO>"
-  log $ "Part 2 ==> " <> result
+  let
+    instructions = parse input
+    initialState = { x: 0, y: 0, wx: 10, wy: 1 }
+    { x, y } = foldl step2 initialState instructions
+    result = abs x + abs y
+  log $ "Part 2 ==> " <> show result
 
