@@ -158,17 +158,19 @@ neighborCount2 grid x y =
 
 isNeighbor2 :: Grid -> Int -> Int -> Int -> Int -> Boolean
 isNeighbor2 grid x y dx dy =
-  let newx = x + dx
-      newy = y + dy
-  in case grid !! newy of
-    Nothing -> false
-    Just row -> case row !! newx of
-                    -- out of bounds
-                    Just Occupied -> true
-                    -- recurse to see across floors
-                    Just Floor -> isNeighbor2 grid newx newy dx dy
-                    -- Empty or Nothing 
-                    _ -> false
+  let
+    newx = x + dx
+    newy = y + dy
+  in
+    case grid !! newy of
+      Nothing -> false
+      Just row -> case row !! newx of
+        -- out of bounds
+        Just Occupied -> true
+        -- recurse to see across floors
+        Just Floor -> isNeighbor2 grid newx newy dx dy
+        -- Empty or Nothing 
+        _ -> false
 
 part2 :: String -> Effect Unit
 part2 input = do
