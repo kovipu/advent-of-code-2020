@@ -69,6 +69,8 @@ part1 input = do
 
 part2 :: String -> Effect Unit
 part2 input = do
-  let result = "<TODO>"
-  log $ "Part 2 ==> " <> result
+  let
+    start = parse input
+    result = findNth start 30000000
+  log $ "Part 2 ==> " <> show result
 
