@@ -3,7 +3,7 @@ module Year2020.Day14 where
 import Prelude
 import Control.Alternative (empty)
 import Data.Array.NonEmpty (toArray)
-import Data.Array (fromFoldable, last, init, concatMap, (:), (!!))
+import Data.Array (fromFoldable, last, init, concatMap, (:), (!!), length)
 import Data.BigInt (BigInt, fromInt, toString, pow, and, or)
 import Data.CodePoint.Unicode (isAscii, isDecDigit)
 import Data.Either (Either(..))
@@ -27,7 +27,6 @@ import Parsing (Parser, runParser)
 import Parsing.Combinators ((<|>), many1Till)
 import Parsing.Combinators.Array (many1, many)
 import Parsing.String (takeN, string, char, satisfy)
-import Debug (spy)
 
 example :: String
 example =
@@ -43,6 +42,22 @@ example2 =
 mem[42] = 100
 mask = 00000000000000000000000000000000X0XX
 mem[26] = 1
+"""
+
+example3 :: String
+example3 =
+  """mask = 1110X1110XXX101X0011010X110X10X0110X
+mem[40257] = 51331021
+mem[18433] = 464024066
+mem[9993] = 463909
+mask = 11X011010X110X101X011X1X010X10100001
+mem[54152] = 692939
+mem[31079] = 22525259
+mem[33597] = 474240
+mem[3881] = 919507
+mem[24651] = 48975360
+mem[14815] = 1554
+mem[17731] = 1337580
 """
 
 data Instruction
@@ -143,7 +158,8 @@ part1 input = do
   log $ "Part 1 ==> " <> toString result
 
 --------------------------------------------------------------------------------
-type State2 = { mask :: String, memory :: Map BigInt Int }
+
+type State2 = { mask :: String, memory :: Map BigInt BigInt }
 
 runProgram2 :: Array Instruction -> State2
 runProgram2 = foldl step2 { mask: "", memory: Map.empty }
@@ -157,8 +173,9 @@ step2 st@{ mask, memory } inst =
       -- take each masked addr -> write val to it
       let
         addresses = unsafePartial $ maskAddr addr mask
+        v = fromInt val
       in
-        st { memory = foldl (\acc a -> Map.insert a val acc) memory addresses }
+        st { memory = foldl (\acc a -> Map.insert a v acc) memory addresses }
 
 maskAddr :: Partial => Int -> String -> Array BigInt
 maskAddr addr mask =
@@ -171,22 +188,23 @@ maskAddr addr mask =
     initial = case first of
       'X' -> [ [ 0 ], [ 1 ] ]
       '1' -> [ [ 1 ] ]
-      '0' -> [ [ 0 ] ]
-  -- map with the mask
+      '0' -> [ [ addrBinary !! 0 # fromJust ] ]
+  -- generate all possible addresses
   in
     foldrWithIndex
       ( \idx b acc ->
           case b of
-            '0' -> -- add unchanged bit to each addr
+            '0' ->
+              -- add unchanged bit to each addr
               let
                 bit = addrBinary !! (35 - idx) # fromMaybe 0
               in
                 map (\e -> bit : e) acc
-            '1' -> -- add 1 to each addr
-
+            '1' ->
+              -- add 1 to each addr
               map (\e -> 1 : e) acc
-            'X' -> -- add 0 & 1 doubling addresses
-
+            'X' ->
+              -- add 0 & 1 doubling addresses
               concatMap (\e -> [ 0 : e, 1 : e ]) acc
       )
       initial
@@ -202,10 +220,10 @@ toBinary n = case n of
 
 part2 :: String -> Effect Unit
 part2 input = do
-  instructions <- parse example2
+  instructions <- parse input
   let
     { memory } = runProgram2 instructions
-    result = foldl (\acc n -> acc + (fromInt n)) zer0 memory
+    result = foldl (+) zer0 memory
 
   log $ "Part 2 ==> " <> toString result
 
