@@ -3,7 +3,7 @@ module Year2020.Day14 where
 import Prelude
 import Control.Alternative (empty)
 import Data.Array.NonEmpty (toArray)
-import Data.Array (fromFoldable)
+import Data.Array (fromFoldable, last, init, concatMap, (:), (!!))
 import Data.BigInt (BigInt, fromInt, toString, pow, and, or)
 import Data.CodePoint.Unicode (isAscii, isDecDigit)
 import Data.Either (Either(..))
@@ -16,11 +16,13 @@ import Data.Map as Map
 import Data.Show.Generic (genericShow)
 import Data.String.CodePoints (codePointFromChar)
 import Data.String.CodeUnits (fromCharArray, toCharArray)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromJust, fromMaybe)
 import Data.Tuple (fst)
 import Effect (Effect)
 import Effect.Class.Console (log, logShow)
 import Effect.Exception (throw)
+import Effect.Exception.Unsafe (unsafeThrow)
+import Partial.Unsafe (unsafePartial)
 import Parsing (Parser, runParser)
 import Parsing.Combinators ((<|>), many1Till)
 import Parsing.Combinators.Array (many1, many)
@@ -33,6 +35,14 @@ example =
 mem[8] = 11
 mem[7] = 101
 mem[8] = 0
+"""
+
+example2 :: String
+example2 =
+  """mask = 000000000000000000000000000000X1001X
+mem[42] = 100
+mask = 00000000000000000000000000000000X0XX
+mem[26] = 1
 """
 
 data Instruction
@@ -108,14 +118,13 @@ bitmask val mask =
       # map (\b -> if b == '1' then 1 else 0)
       # toInt
   in
-     exces `and` (fromInt val) `or` ones
+    exces `and` (fromInt val) `or` ones
 
 toInt :: Array Int -> BigInt
 toInt = foldrWithIndex
   ( \idx b acc ->
-      if b == 1
-        then acc + (two `pow` (fromInt (35 - idx)))
-        else acc
+      if b == 1 then acc + (two `pow` (fromInt (35 - idx)))
+      else acc
   )
   zer0
 
@@ -128,14 +137,75 @@ zer0 = fromInt 0
 part1 :: String -> Effect Unit
 part1 input = do
   instructions <- parse input
-  let { memory } = runProgram instructions
-      result = foldl (+) zer0 memory
+  let
+    { memory } = runProgram instructions
+    result = foldl (+) zer0 memory
   log $ "Part 1 ==> " <> toString result
 
 --------------------------------------------------------------------------------
+type State2 = { mask :: String, memory :: Map BigInt Int }
+
+runProgram2 :: Array Instruction -> State2
+runProgram2 = foldl step2 { mask: "", memory: Map.empty }
+
+step2 :: State2 -> Instruction -> State2
+step2 st@{ mask, memory } inst =
+  case inst of
+    Mask m ->
+      st { mask = m }
+    Mem addr val ->
+      -- take each masked addr -> write val to it
+      let
+        addresses = unsafePartial $ maskAddr addr mask
+      in
+        st { memory = foldl (\acc a -> Map.insert a val acc) memory addresses }
+
+maskAddr :: Partial => Int -> String -> Array BigInt
+maskAddr addr mask =
+  -- convert addr to binary
+  let
+    addrBinary = toBinary addr
+    maskArr = mask # toCharArray
+    first = last maskArr # fromJust
+    rest = init maskArr # fromJust
+    initial = case first of
+      'X' -> [ [ 0 ], [ 1 ] ]
+      '1' -> [ [ 1 ] ]
+      '0' -> [ [ 0 ] ]
+  -- map with the mask
+  in
+    foldrWithIndex
+      ( \idx b acc ->
+          case b of
+            '0' -> -- add unchanged bit to each addr
+              let
+                bit = addrBinary !! (35 - idx) # fromMaybe 0
+              in
+                map (\e -> bit : e) acc
+            '1' -> -- add 1 to each addr
+
+              map (\e -> 1 : e) acc
+            'X' -> -- add 0 & 1 doubling addresses
+
+              concatMap (\e -> [ 0 : e, 1 : e ]) acc
+      )
+      initial
+      rest
+      # map toInt
+
+toBinary :: Int -> Array Int
+toBinary n = case n of
+  0 -> [ 0 ]
+  n | n `mod` 2 == 1 -> 1 : toBinary (n `div` 2)
+  n | n `mod` 2 == 0 -> 0 : toBinary (n `div` 2)
+  _ -> unsafeThrow "how?"
 
 part2 :: String -> Effect Unit
 part2 input = do
-  let result = "<TODO>"
-  log $ "Part 2 ==> " <> result
+  instructions <- parse example2
+  let
+    { memory } = runProgram2 instructions
+    result = foldl (\acc n -> acc + (fromInt n)) zer0 memory
+
+  log $ "Part 2 ==> " <> toString result
 
