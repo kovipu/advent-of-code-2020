@@ -3,7 +3,8 @@ module Year2020.Day17 where
 import Prelude
 
 import AOC.Lib (iterate)
-import Data.Array (filter, (..))
+import Control.Alternative (guard)
+import Data.Array (filter, (..), (:), length)
 import Data.Foldable (foldl)
 import Data.FoldableWithIndex (foldlWithIndex)
 import Data.HashMap (HashMap)
@@ -26,6 +27,7 @@ example =
 ###
 """
 
+--------------------------------------------------------------------------------
 type Coords = { x :: Int, y :: Int, z :: Int }
 
 -- manage dimension in a Map
@@ -128,18 +130,14 @@ printDimension dimension =
 
 countActiveNeighbors :: Dimension -> Coords -> Int
 countActiveNeighbors dimension cube =
-  let
-    neighbors = getNeighbors cube
-  in
-    foldl
-      ( \acc neighbor ->
-          if HashMap.lookup neighbor dimension == Just true then acc + 1
-          else acc
-      )
-      0
-      neighbors
+  foldl
+    ( \acc neighbor ->
+        if HashMap.lookup neighbor dimension == Just true then acc + 1
+        else acc
+    )
+    0
+    (getNeighbors cube)
 
---------------------------------------------------------------------------------
 step :: Dimension -> Dimension
 step dimension =
   foldl
@@ -151,7 +149,6 @@ step dimension =
           if activeNeighbors == 3 then insertWithNeighbors acc cube
           else if activeNeighbors == 2 && isActive then insertWithNeighbors acc cube
           else acc
-
     )
     HashMap.empty
     (HashMap.toArrayBy Tuple dimension)
@@ -170,9 +167,115 @@ part1 input = do
   log $ "Part 1 ==> " <> show result
 
 --------------------------------------------------------------------------------
+type Coords4D = { x :: Int, y :: Int, z :: Int, w :: Int }
+
+type Dimension4D = HashMap Coords4D Boolean
+
+parse4D :: String -> Dimension4D
+parse4D input =
+  split (Pattern "\n") input
+    # filter (_ /= "")
+    # foldlWithIndex
+        ( \y dimension row ->
+            foldlWithIndex
+              ( \x dimension cube ->
+                  -- if cube active -> add it and its neighbors to acc
+                  if cube == '#' then
+                    insertWithNeighbors4D dimension { x, y, z: 0, w: 0 }
+                  else dimension
+              )
+              dimension
+              (toCharArray row)
+        )
+        HashMap.empty
+
+insertWithNeighbors4D :: Dimension4D -> Coords4D -> Dimension4D
+insertWithNeighbors4D dimension coords =
+  let
+    neighbors = getNeighbors4D coords
+  in
+    foldl
+      ( \acc neighbor ->
+          HashMap.insertWith
+            (\prev _ -> prev)
+            neighbor
+            false
+            acc
+      )
+      (HashMap.insert coords true dimension)
+      neighbors
+
+getNeighbors4D :: Coords4D -> Array Coords4D
+getNeighbors4D { x, y, z, w } =
+  map
+    ( \n ->
+        { x: x + n.x
+        , y: y + n.y
+        , z: z + n.z
+        , w: w + n.w
+        }
+    )
+    neighbors4D
+
+neighbors4D :: Array Coords4D
+neighbors4D = do
+  let range = (-1) .. 1
+  x <- range
+  y <- range
+  z <- range
+  w <- range
+  guard $ x /= 0 || y /= 0 || z /= 0 || w /= 0
+  pure $ { x, y, z, w }
+
+countActiveNeighbors4D :: Dimension4D -> Coords4D -> Int
+countActiveNeighbors4D dimension cube =
+  foldl
+    ( \acc neighbor ->
+        if HashMap.lookup neighbor dimension == Just true then acc + 1
+        else acc
+    )
+    0
+    (getNeighbors4D cube)
+
+step4D :: Dimension4D -> Dimension4D
+step4D dimension =
+  foldl
+    ( \acc (cube /\ isActive) ->
+        -- check each cube -> follow rules -> if active -> add neighbors
+        let
+          activeNeighbors = countActiveNeighbors4D dimension cube
+        in
+          if activeNeighbors == 3 then insertWithNeighbors4D acc cube
+          else if activeNeighbors == 2 && isActive then insertWithNeighbors4D acc cube
+          else acc
+    )
+    HashMap.empty
+    (HashMap.toArrayBy Tuple dimension)
 
 part2 :: String -> Effect Unit
 part2 input = do
-  let result = "<TODO>"
-  log $ "Part 2 ==> " <> result
+  let
+    initial = parse4D input
+
+    state1 = step4D initial
+    _ = spy "state1 done" true
+
+    state2 = step4D state1
+    _ = spy "state2 done" true
+
+    state3 = step4D state2
+    _ = spy "state3 done" true
+
+    state4 = step4D state3
+    _ = spy "state4 done" true
+
+    state5 = step4D state4
+    _ = spy "state5 done" true
+
+    endState = step4D state5
+    _ = spy "endState done" true
+
+    result = HashMap.size $ HashMap.filter identity endState
+
+  log $ "Part 2 ==> " <> show result
 
