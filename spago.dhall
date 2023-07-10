@@ -38,6 +38,7 @@ to generate this file without the comments in this block.
   , "stringutils"
   , "tuples"
   , "unicode"
+  , "unordered-collections"
   , "unsafe-coerce"
   ]
 , packages = ./packages.dhall
