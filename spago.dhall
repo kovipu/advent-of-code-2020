@@ -35,6 +35,7 @@ to generate this file without the comments in this block.
   , "prelude"
   , "st"
   , "strings"
+  , "stringutils"
   , "tuples"
   , "unicode"
   , "unsafe-coerce"
