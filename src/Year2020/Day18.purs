@@ -6,7 +6,7 @@ import Control.Alternative (empty)
 import Control.Lazy (fix)
 import Data.Array (length, reverse)
 import Data.BigInt (BigInt, fromInt, toString)
-import Data.Foldable (foldl)
+import Data.Foldable (foldl, sum)
 import Data.Generic.Rep (class Generic)
 import Data.Show.Generic (genericShow)
 import Data.Int (fromString)
@@ -21,7 +21,7 @@ import Effect (Effect)
 import Effect.Class.Console (log, logShow)
 import Effect.Exception (throw)
 import Parsing (Parser, runParser)
-import Parsing.Combinators ((<|>), option, optional)
+import Parsing.Combinators ((<|>), option, optional, between, chainl1, try)
 import Parsing.Combinators.Array (many)
 import Parsing.String (anyTill, string, char, anyChar)
 import Parsing.String.Basic (intDecimal)
@@ -84,11 +84,6 @@ expr =
       _ <- char ')'
       pure e
 
-    lit :: Parser String Expr
-    lit = do
-      d <- intDecimal
-      pure $ Lit d
-
     end :: Parser String (Maybe (Tuple Op Expr))
     end =
       let
@@ -113,6 +108,9 @@ expr =
         Just (Plus /\ e2) -> pure $ Add e1 e2
         Just (Mult /\ e2) -> pure $ Mul e1 e2
 
+lit :: Parser String Expr
+lit = Lit <$> intDecimal
+
 --------------------------------------------------------------------------------
 
 evaluate :: Expr -> BigInt
@@ -123,7 +121,6 @@ evaluate (Lit l) = (fromInt l)
 part1 :: String -> Effect Unit
 part1 input = do
   expressions <- parse input
-  _ <- logShow expressions
   let
     result :: BigInt
     result = foldl
@@ -133,9 +130,28 @@ part1 input = do
   log $ "Part 1 ==> " <> toString result
 
 --------------------------------------------------------------------------------
+parse2 :: String -> Effect (Array Expr)
+parse2 input =
+  case runParser input (many (expr2 <* char '\n')) of
+    Right r -> pure r
+    Left _ -> throw "parsing failed"
+
+expr2 :: Parser String Expr
+expr2 = fix \p ->
+  let
+    atom :: Parser String Expr
+    atom = lit <|> between (char '(') (char ')') p
+
+    plus :: Parser String Expr
+    plus = chainl1 atom (try (string " + ") $> Add)
+  in
+    chainl1 plus (try (string " * ") $> Mul)
 
 part2 :: String -> Effect Unit
 part2 input = do
-  let result = "<TODO>"
-  log $ "Part 2 ==> " <> result
+  expressions <- parse2 input
+  let
+    result :: BigInt
+    result = map evaluate expressions # sum
+  log $ "Part 2 ==> " <> toString result
 
